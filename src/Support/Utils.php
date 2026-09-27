@@ -2,8 +2,9 @@
 
 namespace Wsmallnews\Profile\Support;
 
-use Wsmallnews\Support\Support\ScopeableContext;
-
+/**
+ * profile 包工具（用户附属资料域：无 scopeable——归属随 owner User/Member，与 user/member 包同构）
+ */
 class Utils
 {
     /**
@@ -12,26 +13,6 @@ class Utils
     public static function getConfig(?string $name = null, mixed $default = null): mixed
     {
         return config('sn-profile' . ($name ? '.' . $name : ''), $default);
-    }
-
-    public static function getScopeableContext(): ScopeableContext
-    {
-        $scopeable = static::getScopeable();
-
-        return new ScopeableContext($scopeable['scope_type'], $scopeable['scope_id']);
-    }
-
-    /**
-     * @return array{scope_type: string, scope_id: int}
-     */
-    public static function getScopeable(): array
-    {
-        $scopeable = static::getConfig('scopeables.main', []);
-
-        return [
-            'scope_type' => $scopeable['scope_type'] ?? 'sn-profile',
-            'scope_id' => (int) ($scopeable['scope_id'] ?? 0),
-        ];
     }
 
     /**

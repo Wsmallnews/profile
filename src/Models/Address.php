@@ -30,27 +30,19 @@ class Address extends Model
     ];
 
     /**
-     * 地址所有者（User / Member）
+     * 设为默认地址（同一 owner 范围内唯一）
      */
-    public function owner(): MorphTo
+    public function setDefault(): void
     {
-        return $this->morphTo();
-    }
+        DB::transaction(function () {
+            static::query()
+                ->where('owner_type', $this->owner_type)
+                ->where('owner_id', $this->owner_id)
+                ->where('id', '!=', $this->id)
+                ->update(['is_default' => false]);
 
-    /**
-     * 租户（NULL = 全局地址，如跨租户共享的用户地址）
-     */
-    public function team(): BelongsTo
-    {
-        return $this->belongsTo(SupportUtils::getTenantModel());
-    }
-
-    /**
-     * 默认优先 + 新建优先
-     */
-    public function scopeOrdered(Builder $query): Builder
-    {
-        return $query->orderByDesc('is_default')->orderByDesc('id');
+            $this->update(['is_default' => true]);
+        });
     }
 
     /**
@@ -75,18 +67,26 @@ class Address extends Model
     }
 
     /**
-     * 设为默认地址（同一 owner 范围内唯一）
+     * 默认优先 + 新建优先
      */
-    public function setDefault(): void
+    public function scopeOrdered(Builder $query): Builder
     {
-        DB::transaction(function () {
-            static::query()
-                ->where('owner_type', $this->owner_type)
-                ->where('owner_id', $this->owner_id)
-                ->where('id', '!=', $this->id)
-                ->update(['is_default' => false]);
+        return $query->orderByDesc('is_default')->orderByDesc('id');
+    }
 
-            $this->update(['is_default' => true]);
-        });
+    /**
+     * 地址所有者（User / Member）
+     */
+    public function owner(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    /**
+     * 租户（NULL = 全局地址，如跨租户共享的用户地址）
+     */
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(SupportUtils::getTenantModel());
     }
 }

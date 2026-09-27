@@ -2,8 +2,6 @@
 
 namespace Wsmallnews\Profile;
 
-use CommerceGuys\Addressing\Country\CountryRepository;
-use CommerceGuys\Addressing\Subdivision\SubdivisionRepository;
 use Filament\Support\Assets\Asset;
 use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Facades\FilamentIcon;
@@ -61,6 +59,7 @@ class ProfileServiceProvider extends PackageServiceProvider
         // 注册模型别名
         Relation::enforceMorphMap([
             'sn_profile_address' => Utils::getAddressModel(),
+            'sn_profile_region' => Utils::getRegionModel(),
         ]);
 
         // Asset Registration
@@ -78,7 +77,7 @@ class ProfileServiceProvider extends PackageServiceProvider
         FilamentIcon::register($this->getIcons());
 
         // Handle Stubs
-        if (app()->runningInConsole()) {
+        if (app()->runningInConsole() && is_dir(__DIR__ . '/../stubs/')) {
             foreach (app(Filesystem::class)->files(__DIR__ . '/../stubs/') as $file) {
                 $this->publishes([
                     $file->getRealPath() => base_path("stubs/profile/{$file->getFilename()}"),

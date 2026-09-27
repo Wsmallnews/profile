@@ -18,7 +18,7 @@ class ImportRegionsCommand extends Command
 {
     protected $signature = 'profile:import-regions
                             {--path= : CSV 文件路径（默认导入包内 data/ 附带版本）}
-                            {--version= : 数据版本号（默认读包内 data/VERSION）}
+                            {--data-version= : 数据版本号（默认读包内 data/VERSION）}
                             {--force : 表非空时强制重建导入}';
 
     protected $description = 'Import China administrative divisions (AreaCity 4-level data) into sn_profile_regions';
@@ -53,20 +53,34 @@ class ImportRegionsCommand extends Command
             return self::FAILURE;
         }
 
-        $imported = DB::transaction(function () use ($table, $rows) {
+        $chunks = array_chunk($rows, 500);
+
+        $progress = $this->output->createProgressBar(count($chunks));
+        $progress->setFormat(' %current%/%max% [%bar%] %percent:3s%% %message%');
+        $progress->setMessage(sprintf('%d rows', count($rows)));
+
+        $imported = DB::transaction(function () use ($table, $rows, $chunks, $progress) {
             // 表只服务选择不承载历史（历史在地址快照），重建最干净
-            DB::table($table)->truncate();
+            // 注意用 delete 而非 truncate：MySQL 的 TRUNCATE 会隐式提交、终结外层事务
+            DB::table($table)->delete();
 
-            $chunks = array_chunk($rows, 500);
+            $progress->start();
 
-            foreach ($chunks as $chunk) {
+            foreach ($chunks as $index => $chunk) {
                 DB::table($table)->insert($chunk);
+
+                $progress->setMessage(sprintf('chunk %d / %d (%d rows)', $index + 1, count($chunks), count($rows)));
+                $progress->advance();
             }
+
+            $progress->finish();
+
+            $this->newLine();
 
             return count($rows);
         });
 
-        $version = $this->option('version')
+        $version = $this->option('data-version')
             ?: (is_file(dirname($path) . '/VERSION') ? trim((string) file_get_contents(dirname($path) . '/VERSION')) : '')
             ?: (string) now()->format('Ymd');
 

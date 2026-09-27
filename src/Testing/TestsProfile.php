@@ -26,7 +26,7 @@ trait TestsProfile
             ['id' => 440305, 'parent_id' => 4403, 'level' => 3, 'name' => '南山', 'full_name' => '南山区', 'ext_id' => '440305000000'],
             ['id' => 441900, 'parent_id' => 4419, 'level' => 3, 'name' => '东莞', 'full_name' => '东莞市', 'ext_id' => '441900000000'],
             ['id' => 110101, 'parent_id' => 1101, 'level' => 3, 'name' => '东城', 'full_name' => '东城区', 'ext_id' => '110101000000'],
-            ['id' => 440305004, 'parent_id' => 440305, 'level' => 4, 'name' => '南头', 'full_name' => '南头街道', 'ext_id' => '440305004000'],
+            ['id' => 440305001, 'parent_id' => 440305, 'level' => 4, 'name' => '南头', 'full_name' => '南头街道', 'ext_id' => '440305001000'],
             ['id' => 441900003, 'parent_id' => 441900, 'level' => 4, 'name' => '东城', 'full_name' => '东城街道', 'ext_id' => '441900003000'],
         ];
 

@@ -4,6 +4,7 @@ namespace Wsmallnews\Profile\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -32,18 +33,18 @@ class Region extends Model
         return $this->full_name ?: $this->name;
     }
 
-    public function parent(): HasMany
+    public function scopeLevel(Builder $query, int $level): Builder
     {
-        return $this->hasMany(static::class, 'id', 'parent_id');
+        return $query->where('level', $level);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(static::class, 'parent_id');
     }
 
     public function children(): HasMany
     {
         return $this->hasMany(static::class, 'parent_id')->orderBy('id');
-    }
-
-    public function scopeLevel(Builder $query, int $level): Builder
-    {
-        return $query->where('level', $level);
     }
 }

@@ -1,0 +1,6 @@
+/*
+ * profile 包样式入口。
+ * 公共 sn-* 工具类在 support 包 utilities.css，本文件只声明本包视图的 Tailwind 扫描来源。
+ */
+
+@source "../views/**/*";

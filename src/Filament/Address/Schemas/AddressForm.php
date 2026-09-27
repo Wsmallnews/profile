@@ -1,12 +1,12 @@
 <?php
 
-namespace Wsmallnews\Profile\Filament\Schemas;
+namespace Wsmallnews\Profile\Filament\Address\Schemas;
 
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Get;
-use Wsmallnews\Profile\Filament\Forms\Fields\RegionCascade;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Wsmallnews\Profile\Filament\Address\Forms\Fields\RegionCascade;
 use Wsmallnews\Profile\Support\Utils;
 
 /**

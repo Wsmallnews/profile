@@ -1,13 +1,11 @@
 <?php
 
-namespace Wsmallnews\Profile\Filament\Forms\Fields;
+namespace Wsmallnews\Profile\Filament\Address\Forms\Fields;
 
 use Closure;
-use Filament\Forms\Components\Concerns\CanBeDisabled;
 use Filament\Forms\Components\Concerns\HasExtraInputAttributes;
-use Filament\Forms\Components\Concerns\HasPlaceholder;
-use Filament\Forms\Components\Contracts\HasAffixActions;
 use Filament\Forms\Components\Field;
+use Filament\Schemas\Components\Concerns\CanBeDisabled;
 use Filament\Support\Concerns\HasExtraAlpineAttributes;
 use Illuminate\Database\Eloquent\Model;
 use Wsmallnews\Profile\Services\RegionService;
@@ -22,14 +20,13 @@ use Wsmallnews\Profile\Support\Utils;
  * - 国际：commerceguys/addressing 包内数据（动态深度，无下级即停）
  * - 单国站点自动隐藏国家选择器；写库用 RegionCascade::flattenToColumns() 拍平列
  */
-class RegionCascade extends Field implements HasAffixActions
+class RegionCascade extends Field
 {
     use CanBeDisabled;
     use HasExtraAlpineAttributes;
     use HasExtraInputAttributes;
-    use HasPlaceholder;
 
-    protected string $view = 'sn-profile::forms.fields.region-cascade';
+    protected string $view = 'sn-profile::filament.address.forms.fields.region-cascade';
 
     protected ?int $depth = null;
 
@@ -40,18 +37,25 @@ class RegionCascade extends Field implements HasAffixActions
     protected function setUp(): void
     {
         $this->afterStateHydrated(function (RegionCascade $component, ?array $state) {
-            $record = $component->getRecord();
-
-            if (! $record) {
-                $component->state($state ?: [
-                    'country' => $component->getDefaultCountry(),
-                    'chain' => [],
-                ]);
+            // 非 null 的 state 来自 formatStateUsing（关联桥接场景，如订单地址编辑），原样保留
+            if ($state !== null) {
+                $component->state($state);
 
                 return;
             }
 
-            $component->state(static::hydrateFromColumns($record));
+            $record = $component->getRecord();
+
+            if ($record) {
+                $component->state(static::hydrateFromColumns($record));
+
+                return;
+            }
+
+            $component->state([
+                'country' => $component->getDefaultCountry(),
+                'chain' => [],
+            ]);
         });
 
         // 选到的最后一级必须是叶子（无下级区划），防止中途截断
@@ -224,15 +228,15 @@ class RegionCascade extends Field implements HasAffixActions
     }
 
     /**
-     * @return array<string, array{0: string, 1: string}>
+     * @return list<array{0: string, 1: string}>
      */
     protected static function columnPairs(): array
     {
         return [
-            'administrative_area' => ['administrative_area', 'administrative_area_name'],
-            'locality' => ['locality', 'locality_name'],
-            'dependent_locality' => ['dependent_locality', 'dependent_locality_name'],
-            'township' => ['township', 'township_name'],
+            ['administrative_area', 'administrative_area_name'],
+            ['locality', 'locality_name'],
+            ['dependent_locality', 'dependent_locality_name'],
+            ['township', 'township_name'],
         ];
     }
 }

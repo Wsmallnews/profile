@@ -1,7 +1,9 @@
-<div @class([
-    'w-full flex flex-col sn-gap',
-    $contained ? 'sn-container sn-padded' : '',
-])>
+{{-- 自含容器：卡片网格用容器断点（@3xl=768px 对齐原视口 md），窄槽自动降为单列 --}}
+<div class="w-full @container">
+    <div @class([
+        'w-full flex flex-col sn-gap',
+        $contained ? 'sn-container sn-padded' : '',
+    ])>
     <div class="flex flex-wrap items-center justify-between gap-4">
         <h3 class="sn-h3-text">
             {{ __('sn-profile::profile.address.choose_title') }}
@@ -24,15 +26,7 @@
             <p class="sn-descript-text">{{ __('sn-profile::profile.address.empty_description') }}</p>
         </div>
     @else
-        <x-filament::grid
-            :default="$this->getColumns('default')"
-            :sm="$this->getColumns('sm')"
-            :md="$this->getColumns('md')"
-            :lg="$this->getColumns('lg')"
-            :xl="$this->getColumns('xl')"
-            :two-xl="$this->getColumns('2xl')"
-            class="sn-gap"
-        >
+        <div class="grid grid-cols-1 gap-4 @3xl:grid-cols-2">
             @foreach ($addresses as $address)
                 <div
                     class="w-full flex flex-col border rounded-lg sn-padded cursor-pointer transition"
@@ -69,8 +63,9 @@
                     </div>
                 </div>
             @endforeach
-        </x-filament::grid>
+        </div>
     @endif
-</div>
 
-<x-filament-actions::modals />
+    <x-filament-actions::modals />
+    </div>
+</div>
