@@ -3,6 +3,7 @@
 namespace Wsmallnews\Profile\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -48,22 +49,22 @@ class Address extends Model
     /**
      * 区划展示链（广东省　深圳市　南山区　南头街道）
      */
-    public function getRegionLabelAttribute(): string
+    protected function regionLabel(): Attribute
     {
-        return collect([
+        return Attribute::get(fn () => collect([
             $this->administrative_area_name,
             $this->locality_name,
             $this->dependent_locality_name,
             $this->township_name,
-        ])->filter()->implode('　');
+        ])->filter()->implode('　'));
     }
 
     /**
      * 完整地址（区划链 + 详细地址）
      */
-    public function getFullAddressAttribute(): string
+    protected function fullAddress(): Attribute
     {
-        return collect([$this->region_label, $this->address_line1])->filter()->implode(' ');
+        return Attribute::get(fn () => collect([$this->region_label, $this->address_line1])->filter()->implode(' '));
     }
 
     /**

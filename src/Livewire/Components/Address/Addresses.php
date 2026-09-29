@@ -20,8 +20,9 @@ use Wsmallnews\Support\Livewire\Concerns\CanBeContained;
 /**
  * 个人中心地址簿管理（增删改查 + 设默认）
  *
- * <livewire:sn-profile::components.address.addresses :owner="$member" />
+ * <livewire:sn-profile::components.address.addresses :owner="$member" :contained="false" />
  *
+ * owner / contained 等公共属性由 Livewire 按 blade 传参自动注入，无需 mount。
  * ChooseAddress 继承本组件复用 CRUD 骨架（hook：addressCreateLabel / addressCreated）。
  */
 class Addresses extends Base implements HasActions, HasForms
@@ -32,12 +33,6 @@ class Addresses extends Base implements HasActions, HasForms
 
     #[Locked]
     public Model $owner;
-
-    public function mount(Model $owner, bool $contained = true): void
-    {
-        $this->owner = $owner;
-        $this->contained = $contained;
-    }
 
     /**
      * @return array<string, mixed>

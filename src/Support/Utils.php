@@ -8,7 +8,10 @@ namespace Wsmallnews\Profile\Support;
 class Utils
 {
     /**
-     * @return array<string, mixed>
+     * Get configuration value.
+     *
+     * @param  string|null  $name  Configuration key (dot notation)
+     * @param  mixed  $default  Default value if not found
      */
     public static function getConfig(?string $name = null, mixed $default = null): mixed
     {

@@ -3,6 +3,7 @@
 namespace Wsmallnews\Profile\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -28,9 +29,9 @@ class Region extends Model
     /**
      * 展示名（优先全称）
      */
-    public function getDisplayNameAttribute(): string
+    protected function displayName(): Attribute
     {
-        return $this->full_name ?: $this->name;
+        return Attribute::get(fn () => $this->full_name ?: $this->name);
     }
 
     public function scopeLevel(Builder $query, int $level): Builder

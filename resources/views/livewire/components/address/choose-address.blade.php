@@ -1,4 +1,8 @@
-{{-- 自含容器：卡片网格用容器断点（@3xl=768px 对齐原视口 md），窄槽自动降为单列 --}}
+@php
+    use Filament\Support\Icons\Heroicon;
+@endphp
+
+{{-- 自含容器：卡片网格用容器断点（@2xl=672/@5xl=1024），窄槽自动降为单列 --}}
 <div class="w-full @container">
     <div @class([
         'w-full flex flex-col sn-gap',
@@ -21,18 +25,21 @@
     </div>
 
     @if ($addresses->isEmpty())
-        <div class="flex flex-col items-center justify-center gap-2 py-10">
-            <p class="sn-content-text">{{ __('sn-profile::profile.address.empty_title') }}</p>
-            <p class="sn-descript-text">{{ __('sn-profile::profile.address.empty_description') }}</p>
-        </div>
+        {{-- 列表卡内空态：contained=false 不再套卡片（sn-empty 统一版式） --}}
+        <x-sn-support::empty
+            :heading="__('sn-profile::profile.address.empty_title')"
+            :description="__('sn-profile::profile.address.empty_description')"
+            :icon="Heroicon::OutlinedMapPin"
+            :contained="false"
+        />
     @else
-        <div class="grid grid-cols-1 gap-4 @3xl:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 @2xl:grid-cols-2 @5xl:grid-cols-3">
             @foreach ($addresses as $address)
                 <div
-                    class="w-full flex flex-col border rounded-lg sn-padded cursor-pointer transition"
+                    class="w-full flex flex-col sn-padded cursor-pointer sn-container sn-hover"
                     @class([
-                        'ring-1 ring-gray-950/10 hover:ring-2 hover:ring-primary-600 dark:ring-white/20' => $selectedId !== $address->id,
-                        'ring-2 ring-primary-600' => $selectedId === $address->id,
+                        // important 后缀覆盖 sn-container 的 ring-1 基线（选中态 2px 主题环）
+                        'ring-2! ring-primary-600!' => $selectedId === $address->id,
                     ])
                     wire:click="choose({{ $address->id }})"
                     wire:key="sn-profile-choose-address-{{ $address->id }}"

@@ -13,7 +13,7 @@ return [
     | null              = 国际站、全球国家（commerceguys/addressing 全量国家列表）
     | 中国（CN）的区划数据始终走 sn_profile_regions 表（四级深度），其他国家走 commerceguys/addressing
     */
-    'supported_countries' => ['CN'],
+    'supported_countries' => ['CN', 'US'],
 
     /*
     |--------------------------------------------------------------------------

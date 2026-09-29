@@ -35,8 +35,7 @@ class ProfileServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasMigrations($this->getMigrations())
             ->hasTranslations()
-            ->hasViews(static::$viewNamespace)
-            ->hasRoutes($this->getRoutes());
+            ->hasViews(static::$viewNamespace);
     }
 
     public function packageRegistered(): void
@@ -123,9 +122,7 @@ class ProfileServiceProvider extends PackageServiceProvider
      */
     protected function getRoutes(): array
     {
-        return [
-            'web',
-        ];
+        return [];
     }
 
     /**

@@ -2,7 +2,6 @@
 
 namespace Wsmallnews\Profile\Livewire\Components\Address;
 
-use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\Locked;
 use Wsmallnews\Profile\Models\Address;
 
@@ -23,14 +22,11 @@ class ChooseAddress extends Addresses
     #[Locked]
     public ?int $selectedId = null;
 
-    public function mount(Model $owner, bool $contained = true, ?string $manageUrl = null, ?int $selectedId = null): void
+    public function mount(): void
     {
-        parent::mount($owner, $contained);
-
-        $this->manageUrl = $manageUrl;
-
-        // 未显式指定时自动选中默认地址（默认优先 + 新建优先）
-        $this->selectedId = $selectedId ?? $this->owner->addresses()->value('id');
+        // 未显式指定时自动选中默认地址（默认优先 + 新建优先）；
+        // owner / manageUrl / contained 等公共属性已由 Livewire 自动注入
+        $this->selectedId ??= $this->owner->addresses()->value('id');
     }
 
     public function choose(int $id): void

@@ -1,8 +1,11 @@
 @php
+    use Filament\Support\Icons\Heroicon;
+
     $id = $getId();
     $statePath = $getStatePath();
     $isDisabled = $isDisabled();
     $withCountry = $isWithCountry();
+    $placeholder = __('sn-profile::profile.region.placeholder') . implode(' / ', $getLevelLabels());
 @endphp
 
 <x-dynamic-component :component="$getFieldWrapperView()" :field="$field">
@@ -10,54 +13,63 @@
         x-data="snProfileRegionCascade({
             state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
             config: @js([
-                'url' => route('sn-profile::regions'),
+                'statePath' => $statePath,
                 'withCountry' => $withCountry,
                 'countries' => $getCountries(),
                 'defaultCountry' => $getDefaultCountry(),
-                'countryLabel' => __('sn-profile::profile.region.country.label'),
                 'levelLabels' => $getLevelLabels(),
                 'placeholder' => __('sn-profile::profile.region.placeholder'),
                 'noChildrenHint' => __('sn-profile::profile.region.no_children'),
-                'initialDivisions' => $getInitialDivisions(),
+                'divisions' => \Wsmallnews\Profile\Filament\Address\Forms\Fields\RegionCascade::divisionsForState($getState()),
                 'disabled' => $isDisabled,
             ])
         })"
         x-on:keydown.escape.window="open = false"
+        x-on:sn-profile-regions-updated.window="onRegionsUpdated($event.detail.target ?? null, $event.detail.divisions ?? [])"
     >
-        @if ($withCountry)
-            <select
-                id="{{ $id }}-country"
-                x-model="state.country"
-                x-on:change="changeCountry($event.target.value)"
-                {{ $isDisabled ? 'disabled' : '' }}
-                class="mb-2 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-950 shadow-sm outline-none transition focus:border-primary-600 focus:ring-2 focus:ring-primary-600/30 disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-white"
-                aria-label="{{ __('sn-profile::profile.region.country.label') }}"
-            >
-                @foreach ($getCountries() as $code => $label)
-                    <option value="{{ $code }}">{{ $label }}</option>
-                @endforeach
-            </select>
-        @endif
-
         <div class="relative w-full">
-            <button
-                type="button"
-                id="{{ $id }}"
-                x-on:click="toggle()"
-                {{ $isDisabled ? 'disabled' : '' }}
-                class="flex w-full cursor-pointer items-center justify-between gap-x-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-start text-sm text-gray-950 shadow-sm outline-none transition enabled:hover:border-gray-400 focus:border-primary-600 focus:ring-2 focus:ring-primary-600/30 disabled:cursor-default disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-white dark:enabled:hover:border-white/20"
+            {{-- 触发器走 Filament 原生 input 组件：外观与焦点光环同其他表单字段完全一致；
+                国际模式时国家选择融合为前缀（单框形态，共享一个光环）；
+                下拉箭头经 wrapper 的 suffix-icon 渲染（input 组件本身不消费 suffixIcon 属性） --}}
+            <x-filament::input.wrapper
+                :disabled="$isDisabled"
+                :suffix-icon="Heroicon::OutlinedChevronDown"
+                :attributes="\Filament\Support\prepare_inherited_attributes($getExtraAttributeBag())->class(['sn-profile-region-cascade'])"
             >
-                <span
-                    class="block truncate"
-                    x-bind:class="displayText() === '' ? 'text-gray-400 dark:text-gray-500' : ''"
-                    x-text="displayText() || placeholderText()"
-                ></span>
-                <span class="pointer-events-none shrink-0 text-gray-400 dark:text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4 transition-transform" x-bind:class="open && 'rotate-180'">
-                        <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-                    </svg>
-                </span>
-            </button>
+                <div class="flex items-center w-full">
+                    @if ($withCountry)
+                        <select
+                            id="{{ $id }}-country"
+                            x-model="state.country"
+                            x-on:change="changeCountry($event.target.value)"
+                            x-on:mousedown.stop
+                            {{ $isDisabled ? 'disabled' : '' }}
+                            aria-label="{{ __('sn-profile::profile.region.country.label') }}"
+                            class="h-full shrink-0 border-0 border-e border-gray-200 bg-transparent ps-3 pe-2 text-sm text-gray-950 focus:outline-none focus:ring-0 dark:border-white/10 dark:text-white"
+                        >
+                            @foreach ($getCountries() as $code => $label)
+                                <option value="{{ $code }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    @endif
+
+                    <x-filament::input
+                        :attributes="
+                            \Filament\Support\prepare_inherited_attributes($getExtraInputAttributeBag())
+                                ->merge($getExtraAlpineAttributes(), escape: false)
+                                ->merge([
+                                    'disabled' => $isDisabled,
+                                    'id' => $id,
+                                    'placeholder' => $placeholder,
+                                    'readonly' => true,
+                                    'type' => 'text',
+                                    'x-bind:value' => 'displayText()',
+                                    'x-on:click' => 'toggle()',
+                                ], escape: false)
+                        "
+                    />
+                </div>
+            </x-filament::input.wrapper>
 
             <div
                 x-cloak
@@ -90,7 +102,7 @@
                     </template>
                 </div>
 
-                {{-- 选项列表 --}}
+                {{-- 选项列表（chain 变化经 Livewire 更新回推，期间显示加载态） --}}
                 <div class="max-h-60 overflow-y-auto">
                     <template x-if="loading">
                         <div class="px-3 py-6 text-center text-sm text-gray-400 dark:text-gray-500">…</div>
@@ -104,7 +116,7 @@
                         <button
                             type="button"
                             x-on:click="pick(option)"
-                            class="flex w-full items-center justify-between px-3 py-2 text-start text-sm transition hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-white/5"
+                            class="flex w-full items-center justify-between px-3 py-2 text-start text-sm transition hover:bg-gray-50 dark:hover:bg-white/5"
                             x-bind:class="chain[active] && chain[active].code === option.code ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-200'"
                         >
                             <span x-text="option.name"></span>
@@ -122,7 +134,14 @@
     </div>
 </x-dynamic-component>
 
-@once
+{{-- @assets 而非 @once：字段常在 Filament Action 弹窗内经 AJAX 动态渲染，
+     @once 的脚本在这种场景不会执行（Alpine 拿不到组件函数，点击无反应）；
+     @assets 由 Livewire 资产注入机制保证动态渲染时也会执行（旧 DistrictSelect 同款）。
+
+     选项数据流（无独立 HTTP 端点）：chain 是 live entangle，任何变化触发 Livewire 更新，
+     服务端 afterStateUpdated 计算下一级选项并 dispatch sn-profile-regions-updated
+     浏览器事件（payload 带 statePath 定位），Alpine 收事件后刷新 options。 --}}
+@assets
     <script>
         function snProfileRegionCascade({ state, config }) {
             return {
@@ -134,7 +153,6 @@
                 loading: false,
                 hint: '',
                 completed: false,
-                cache: {},
 
                 init() {
                     if (this.state === null || this.state === undefined) {
@@ -143,6 +161,9 @@
                     if (!Array.isArray(this.state.chain)) {
                         this.state.chain = [];
                     }
+
+                    // 初始选项随渲染注入（空链 = 一级区划；已选链 = 下一级/同级列表）
+                    this.options = this.config.divisions || [];
                 },
 
                 get chain() {
@@ -153,10 +174,6 @@
                     return this.chain.map((node) => node.name).join('　');
                 },
 
-                placeholderText() {
-                    return this.config.placeholder + this.config.levelLabels.join(' / ');
-                },
-
                 levelLabel(index) {
                     return this.config.levelLabels[index] || ('区划 ' + (index + 1));
                 },
@@ -165,41 +182,7 @@
                     this.open = !this.open;
 
                     if (this.open) {
-                        this.activate(this.chain.length);
-                    }
-                },
-
-                activate(index) {
-                    this.active = index;
-                    this.hint = '';
-                    this.load(index);
-                },
-
-                async load(index) {
-                    const parents = this.chain.slice(0, index).map((node) => node.code);
-                    const key = this.state.country + '|' + parents.join(',');
-
-                    if (this.cache[key]) {
-                        this.options = this.cache[key];
-
-                        return;
-                    }
-
-                    this.loading = true;
-
-                    try {
-                        const params = new URLSearchParams({ country: this.state.country });
-
-                        if (parents.length > 0) {
-                            params.set('parents', parents.join(','));
-                        }
-
-                        const response = await fetch(this.config.url + '?' + params.toString());
-                        const json = await response.json();
-
-                        this.cache[key] = json.data || [];
-                        this.options = this.cache[key];
-                    } finally {
+                        this.active = this.completed ? Math.max(0, this.chain.length - 1) : this.chain.length;
                         this.loading = false;
                     }
                 },
@@ -211,7 +194,8 @@
 
                     if (option.has_children) {
                         this.completed = false;
-                        this.activate(this.active + 1);
+                        this.active = this.active + 1;
+                        this.loading = true;       // chain 已变，等 Livewire 回推下一级选项
 
                         return;
                     }
@@ -223,12 +207,14 @@
                     }
 
                     this.open = false;
+                    this.loading = true;           // 回推同级列表供下次重开面板切换
                 },
 
                 reselect(index) {
                     this.state.chain = this.chain.slice(0, index);
                     this.completed = false;
-                    this.activate(index);
+                    this.active = index;
+                    this.loading = true;
                 },
 
                 changeCountry(code) {
@@ -236,12 +222,21 @@
                     this.state.chain = [];
                     this.completed = false;
                     this.options = [];
-                    this.cache = {};
+                    this.active = 0;
                     this.hint = '';
                     this.open = true;
-                    this.activate(0);
+                    this.loading = true;
+                },
+
+                onRegionsUpdated(target, divisions) {
+                    if (target !== this.config.statePath) {
+                        return;
+                    }
+
+                    this.options = divisions || [];
+                    this.loading = false;
                 },
             };
         }
     </script>
-@endonce
+@endassets

@@ -36,6 +36,10 @@ class RegionCascade extends Field
 
     protected function setUp(): void
     {
+        // live：chain 变化即触发 Livewire 更新，服务端算好下一级选项后
+        // 经 sn-profile-regions-updated 浏览器事件推给 Alpine（无独立 HTTP 端点）
+        $this->live();
+
         $this->afterStateHydrated(function (RegionCascade $component, ?array $state) {
             // 非 null 的 state 来自 formatStateUsing（关联桥接场景，如订单地址编辑），原样保留
             if ($state !== null) {
@@ -55,6 +59,13 @@ class RegionCascade extends Field
             $component->state([
                 'country' => $component->getDefaultCountry(),
                 'chain' => [],
+            ]);
+        });
+
+        $this->afterStateUpdated(function (RegionCascade $component, ?array $state) {
+            $component->getLivewire()->dispatch('sn-profile-regions-updated', [
+                'target' => $component->getStatePath(),
+                'divisions' => static::divisionsForState($state),
             ]);
         });
 
@@ -179,6 +190,29 @@ class RegionCascade extends Field
     public function getInitialDivisions(): array
     {
         return app(RegionService::class)->divisions($this->getDefaultCountry());
+    }
+
+    /**
+     * 按字段当前 state 计算应展示的区划列表：
+     * 常规 = 已选链的下一级；已到叶子 = 回退一级给同级列表（重开面板时可横向切换）
+     *
+     * @param  array{country?: string, chain?: list<array{code: string, name: string}>}|null  $state
+     * @return list<array{code: string, name: string, has_children: bool}>
+     */
+    public static function divisionsForState(?array $state): array
+    {
+        $service = app(RegionService::class);
+
+        $country = strtoupper((string) (($state['country'] ?? null) ?: Utils::getDefaultCountry()));
+        $parents = collect($state['chain'] ?? [])->pluck('code')->values()->all();
+
+        $divisions = $service->divisions($country, $parents);
+
+        if ($divisions === [] && $parents !== []) {
+            $divisions = $service->divisions($country, array_slice($parents, 0, -1));
+        }
+
+        return $divisions;
     }
 
     /**
