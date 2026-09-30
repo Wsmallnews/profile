@@ -60,7 +60,7 @@
 
                     <div class="text-base my-1 sn-content-text">{{ $address->address_line1 }}</div>
 
-                    <div class="flex items-center justify-between text-base sn-content-text">
+                    <div class="flex items-center justify-between text-base sn-content-text mt-auto pt-1">
                         <span class="flex items-center">
                             <span class="mr-2.5">{{ $address->consignee }}</span>
                             <span>{{ $address->phone }}</span>

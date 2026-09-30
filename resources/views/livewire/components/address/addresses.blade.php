@@ -49,7 +49,8 @@
                         <span>{{ $address->phone }}</span>
                     </div>
 
-                    <div class="flex justify-end items-center gap-2.5 mt-2">
+                    {{-- mt-auto：卡片高度不齐（标签换行）时操作行钉在底部，三按钮右对齐 --}}
+                    <div class="flex justify-end items-center gap-2.5 mt-auto pt-2.5">
                         {{ ($this->setDefaultAction)(['id' => $address->id]) }}
                         {{ ($this->editAction)(['id' => $address->id]) }}
                         {{ ($this->deleteAction)(['id' => $address->id]) }}

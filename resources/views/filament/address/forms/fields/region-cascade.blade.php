@@ -6,10 +6,16 @@
     $isDisabled = $isDisabled();
     $withCountry = $isWithCountry();
     $placeholder = __('sn-profile::profile.region.placeholder') . implode(' / ', $getLevelLabels());
+
+    // 当前 state 应展示的区划列表走独立 data 属性（morph 只更新属性值，不重建 Alpine 组件）；
+    // 禁止放进 x-data：选项随链变化，x-data 属性字符串一变 Livewire 就会重建该组件，
+    // open/active 等 UI 状态全部丢失（选一级面板就被关掉的 bug 即源于此）
+    $divisions = json_encode(\Wsmallnews\Profile\Filament\Address\Forms\Fields\RegionCascade::divisionsForState($getState()));
 @endphp
 
 <x-dynamic-component :component="$getFieldWrapperView()" :field="$field">
     <div class="w-full"
+        data-divisions="{{ $divisions }}"
         x-data="snProfileRegionCascade({
             state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
             config: @js([
@@ -20,12 +26,11 @@
                 'levelLabels' => $getLevelLabels(),
                 'placeholder' => __('sn-profile::profile.region.placeholder'),
                 'noChildrenHint' => __('sn-profile::profile.region.no_children'),
-                'divisions' => \Wsmallnews\Profile\Filament\Address\Forms\Fields\RegionCascade::divisionsForState($getState()),
                 'disabled' => $isDisabled,
             ])
         })"
         x-on:keydown.escape.window="open = false"
-        x-on:sn-profile-regions-updated.window="onRegionsUpdated($event.detail.target ?? null, $event.detail.divisions ?? [])"
+        x-on:sn-profile-regions-updated.window="onRegionsUpdated($event)"
     >
         <div class="relative w-full">
             {{-- 触发器走 Filament 原生 input 组件：外观与焦点光环同其他表单字段完全一致；
@@ -120,9 +125,12 @@
                             x-bind:class="chain[active] && chain[active].code === option.code ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-200'"
                         >
                             <span x-text="option.name"></span>
-                            <svg x-show="chain[active] && chain[active].code === option.code" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4 shrink-0">
-                                <path fill-rule="evenodd" d="M16.704 4.28a.75.75 0 0 1 .016 1.06l-7.25 7.5a.75.75 0 0 1-1.065.016L3.22 9.72a.75.75 0 0 1 1.06-1.06l3.124 3.124 6.25-6.46a.75.75 0 0 1 1.06-.016Z" clip-rule="evenodd" />
-                            </svg>
+                            <x-filament::icon
+                                :icon="Heroicon::Check"
+                                x-show="chain[active] && chain[active].code === option.code"
+                                class="size-4 shrink-0"
+                                aria-hidden="true"
+                            />
                         </button>
                     </template>
                 </div>
@@ -162,8 +170,17 @@
                         this.state.chain = [];
                     }
 
-                    // 初始选项随渲染注入（空链 = 一级区划；已选链 = 下一级/同级列表）
-                    this.options = this.config.divisions || [];
+                    // 初始选项来自 data-divisions 种子（空链 = 一级区划；已选链 = 下一级/同级列表）；
+                    // 后续更新走 sn-profile-regions-updated 事件与 morph 刷新的 data 属性
+                    this.options = this.readSeedDivisions();
+                },
+
+                readSeedDivisions() {
+                    try {
+                        return JSON.parse(this.$el.dataset.divisions || '[]') || [];
+                    } catch (e) {
+                        return [];
+                    }
                 },
 
                 get chain() {
@@ -183,6 +200,12 @@
 
                     if (this.open) {
                         this.active = this.completed ? Math.max(0, this.chain.length - 1) : this.chain.length;
+
+                        // 兜底：无选项且无进行中的请求时读 data 属性种子（事件丢失场景）
+                        if (this.options.length === 0 && ! this.loading) {
+                            this.options = this.readSeedDivisions();
+                        }
+
                         this.loading = false;
                     }
                 },
@@ -228,12 +251,18 @@
                     this.loading = true;
                 },
 
-                onRegionsUpdated(target, divisions) {
-                    if (target !== this.config.statePath) {
+                onRegionsUpdated(event) {
+                    // Livewire 服务端 dispatch 的参数到浏览器端可能包成 detail 数组
+                    // （实测 detail = [{target, divisions}]），做形状归一兼容两种包法
+                    const detail = Array.isArray(event.detail)
+                        ? (event.detail[0] ?? {})
+                        : (event.detail ?? {});
+
+                    if ((detail.target ?? null) !== this.config.statePath) {
                         return;
                     }
 
-                    this.options = divisions || [];
+                    this.options = detail.divisions || [];
                     this.loading = false;
                 },
             };

@@ -86,7 +86,8 @@ class Addresses extends Base implements HasActions, HasForms
 
                 return $record;
             })
-            ->successNotificationTitle(__('sn-profile::profile.address.edit_success'));
+            ->successNotificationTitle(__('sn-profile::profile.address.edit_success'))
+            ->link();
     }
 
     public function setDefaultAction(): Action
@@ -105,7 +106,8 @@ class Addresses extends Base implements HasActions, HasForms
         return DeleteAction::make('delete')
             ->label(__('sn-profile::profile.address.delete'))
             ->record(fn (array $arguments) => $this->findAddress($arguments))
-            ->successNotificationTitle(__('sn-profile::profile.address.delete_success'));
+            ->successNotificationTitle(__('sn-profile::profile.address.delete_success'))
+            ->link();
     }
 
     public function render()
