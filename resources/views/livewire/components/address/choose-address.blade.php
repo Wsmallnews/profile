@@ -36,8 +36,9 @@
         <div class="grid grid-cols-1 gap-4 @2xl:grid-cols-2 @5xl:grid-cols-3">
             @foreach ($addresses as $address)
                 <div
-                    class="w-full flex flex-col sn-padded cursor-pointer sn-container sn-hover"
                     @class([
+                        // 无键项 = 恒定基线；静态 class 与 @class 并存会输出两个 class 属性，后者被浏览器丢弃
+                        'w-full flex flex-col sn-padded cursor-pointer sn-container sn-hover',
                         // important 后缀覆盖 sn-container 的 ring-1 基线（选中态 2px 主题环）
                         'ring-2! ring-primary-600!' => $selectedId === $address->id,
                     ])
