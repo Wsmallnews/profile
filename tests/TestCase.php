@@ -20,7 +20,7 @@ use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as Orchestra;
 use RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider;
 use Wsmallnews\Profile\ProfileServiceProvider;
-use Wsmallnews\Support\SupportServiceProvider;
+use Wsmallnews\Support\SupportServiceProvider as SupportPackageServiceProvider;
 
 class TestCase extends Orchestra
 {
@@ -53,7 +53,7 @@ class TestCase extends Orchestra
             TablesServiceProvider::class,
             WidgetsServiceProvider::class,
             ProfileServiceProvider::class,
-            SupportServiceProvider::class,
+            SupportPackageServiceProvider::class,
         ];
 
         sort($providers);
