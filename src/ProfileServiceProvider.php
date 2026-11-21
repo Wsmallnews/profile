@@ -43,7 +43,7 @@ class ProfileServiceProvider extends PackageServiceProvider
         ModuleRegistry::register(new Module(
             id: static::$name,
             namespace: 'Wsmallnews\Profile',
-            plugin: ProfilePlugin::class,
+            plugin: null,
         ));
 
         // 区划服务（容器单例，app('sn-profile') / Profile facade）

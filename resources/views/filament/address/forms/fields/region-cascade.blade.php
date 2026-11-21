@@ -1,5 +1,8 @@
 @php
     use Filament\Support\Icons\Heroicon;
+    use Wsmallnews\Profile\Filament\Address\Forms\Fields\RegionCascade;
+
+    use function Filament\Support\prepare_inherited_attributes;
 
     $id = $getId();
     $statePath = $getStatePath();
@@ -10,7 +13,7 @@
     // 当前 state 应展示的区划列表走独立 data 属性（morph 只更新属性值，不重建 Alpine 组件）；
     // 禁止放进 x-data：选项随链变化，x-data 属性字符串一变 Livewire 就会重建该组件，
     // open/active 等 UI 状态全部丢失（选一级面板就被关掉的 bug 即源于此）
-    $divisions = json_encode(\Wsmallnews\Profile\Filament\Address\Forms\Fields\RegionCascade::divisionsForState($getState()));
+    $divisions = json_encode(RegionCascade::divisionsForState($getState()));
 @endphp
 
 <x-dynamic-component :component="$getFieldWrapperView()" :field="$field">
@@ -39,7 +42,7 @@
             <x-filament::input.wrapper
                 :disabled="$isDisabled"
                 :suffix-icon="Heroicon::OutlinedChevronDown"
-                :attributes="\Filament\Support\prepare_inherited_attributes($getExtraAttributeBag())->class(['sn-profile-region-cascade'])"
+                :attributes="prepare_inherited_attributes($getExtraAttributeBag())->class(['sn-profile-region-cascade'])"
             >
                 <div class="flex items-center w-full">
                     @if ($withCountry)
@@ -60,7 +63,7 @@
 
                     <x-filament::input
                         :attributes="
-                            \Filament\Support\prepare_inherited_attributes($getExtraInputAttributeBag())
+                            prepare_inherited_attributes($getExtraInputAttributeBag())
                                 ->merge($getExtraAlpineAttributes(), escape: false)
                                 ->merge([
                                     'disabled' => $isDisabled,

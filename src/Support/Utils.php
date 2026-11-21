@@ -63,15 +63,7 @@ class Utils
         return (array) static::getConfig('postal_required_countries', []);
     }
 
-    /**
-     * 面板注册配置
-     *
-     * @return array<string, mixed>
-     */
-    public static function getPanelRegister(?string $type = null): mixed
-    {
-        return static::getConfig('panel_register' . ($type ? '.' . $type : ''), []);
-    }
+
 
     public static function getModel(string $name, bool $shouldException = true): ?string
     {

@@ -53,19 +53,4 @@ return [
         'region' => Region::class,
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | 面板注册
-    |--------------------------------------------------------------------------
-    */
-    'panel_register' => [
-        'global_default' => [
-            'navigation_group' => 'sn-profile::profile.global_default.navigation_group',
-        ],
-        'resources' => [
-        ],
-        'pages' => [
-        ],
-    ],
-
 ];
