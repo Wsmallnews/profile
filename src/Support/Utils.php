@@ -63,8 +63,6 @@ class Utils
         return (array) static::getConfig('postal_required_countries', []);
     }
 
-
-
     public static function getModel(string $name, bool $shouldException = true): ?string
     {
         $model = static::getConfig("models.{$name}");
